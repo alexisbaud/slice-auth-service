@@ -1,7 +1,7 @@
 {
   "name": "slice-microservice-template",
-  "version": "1.0.0",
-  "description": "Generic microservice starter template for Slice MSv2",
+  "version": "template",
+  "description": "Generic microservice",
   "type": "module",
   "main": "src/index.ts",
   "scripts": {
@@ -11,7 +11,6 @@
   },
   "keywords": [
     "microservice",
-    "template",
     "hono",
     "typescript"
   ],
