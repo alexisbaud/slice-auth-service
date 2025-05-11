@@ -11,6 +11,7 @@ import { z } from 'zod';
 import { logger } from './lib/logger'; // Adjusted path for direct execution context
 import authRouter from './routes/auth.route'; // Adjusted path
 import healthRouter from './routes/health.route'; // Adjusted path
+import { db, pgClient } from './db'; // Import pgClient for graceful shutdown
 
 const app = new Hono();
 
@@ -61,11 +62,54 @@ const port = parseInt(process.env.PORT || '3001', 10);
 
 logger.info(`🚀 Auth service is running on port ${port}`);
 
+let server: any = null;
+
 if (process.env.NODE_ENV !== 'test') { // Don't start server in test environment
-    serve({
+    server = serve({
         fetch: app.fetch,
         port: port,
     });
 }
+
+// Graceful shutdown handling
+const gracefulShutdown = async (signal: string) => {
+    logger.info(`Received ${signal}. Shutting down gracefully...`);
+    
+    // Close the server first to stop accepting new connections
+    if (server) {
+        logger.info('Closing HTTP server...');
+        server.close(() => {
+            logger.info('HTTP server closed.');
+        });
+    }
+
+    // Close database connections
+    try {
+        logger.info('Closing database connections...');
+        await pgClient.end();
+        logger.info('Database connections closed.');
+    } catch (err) {
+        logger.error({ err }, 'Error closing database connections');
+    }
+
+    // Exit with success code
+    logger.info('Graceful shutdown completed');
+    process.exit(0);
+};
+
+// Handle termination signals
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+// Handle uncaught exceptions and unhandled rejections to prevent crashed
+process.on('uncaughtException', (err) => {
+    logger.fatal({ err }, 'Uncaught exception');
+    gracefulShutdown('uncaughtException');
+});
+
+process.on('unhandledRejection', (reason) => {
+    logger.fatal({ reason }, 'Unhandled rejection');
+    gracefulShutdown('unhandledRejection');
+});
 
 export default app; // Optional: export app for testing or other purposes 

@@ -30,5 +30,5 @@ export const db = drizzle(client, { schema, logger: process.env.DRIZZLE_LOGGING 
 
 logger.info('🗄️ Database connection configured.');
 
-// You might want to export the client if you need to manage its lifecycle, e.g., for graceful shutdown
-// export { client as pgClient }; 
+// Export the client for graceful shutdown
+export { client as pgClient }; 
