@@ -1,0 +1,20 @@
+{
+  "version": "5",
+  "dialect": "pg",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1746976446090,
+      "tag": "0000_steady_phantom_reporter",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1746980488044,
+      "tag": "0001_majestic_captain_cross",
+      "breakpoints": true
+    }
+  ]
+}

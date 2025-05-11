@@ -1,6 +1,48 @@
-# Slice Microservice Template
+# auth-service
 
-A generic Node.js + TypeScript starter template for microservices in the Slice MSv2 project, designed for deployment on Railway.
+Handles user authentication (signup, login, logout, account deletion) and JWT management.
+
+## Stack
+- TypeScript
+- Hono
+- Zod (validation)
+- Drizzle ORM (PostgreSQL)
+- PostgreSQL LISTEN/NOTIFY for events
+- Pino (logger)
+
+## Environment Variables
+
+Refer to `.env.example` for required environment variables.
+
+## API Endpoints
+
+| Method | Path           | Description                                                                 | Authentication | Request Body                       | Success Response                     | Error Responses                    |
+|--------|----------------|-----------------------------------------------------------------------------|----------------|------------------------------------|--------------------------------------|------------------------------------|
+| POST   | /signup        | Registers a new user.                                                       | None           | `AuthCredentials`                  | `201 Created` + User info (e.g. ID)  | `400 Bad Request`, `409 Conflict`  |
+| POST   | /login         | Logs in an existing user.                                                   | None           | `AuthCredentials`                  | `200 OK` + `AuthTokens`              | `400 Bad Request`, `401 Unauthorized`|
+| POST   | /logout        | Logs out the current user (client-side token invalidation).                 | JWT            | None                               | `204 No Content`                     | `401 Unauthorized`                 |
+| GET    | /me            | Retrieves the authenticated user's basic information (ID, email).           | JWT            | None                               | `200 OK` + User info (ID, email)   | `401 Unauthorized`                 |
+| DELETE | /account       | Deletes the authenticated user's account.                                   | JWT            | None                               | `204 No Content`                     | `401 Unauthorized`                 |
+| GET    | /healthz       | Health check endpoint.                                                      | None           | None                               | `200 OK` + `{ "status": "ok" }`   | -                                  |
+
+## Events Published
+
+- `auth_user_registered`: Published via PostgreSQL NOTIFY when a new user signs up.
+  - Payload: `{ "userId": "<uuid>", "email": "<user_email>", "timestamp": "<iso8601>" }`
+- `auth_user_deleted`: Published via PostgreSQL NOTIFY when a user deletes their account.
+  - Payload: `{ "userId": "<uuid>", "timestamp": "<iso8601>" }`
+
+## Database Schema
+
+- `users` table: Stores user credentials and basic information (`id`, `email`, `hashedPassword`, `createdAt`, `updatedAt`).
+
+## Setup & Running Locally
+
+1.  Install dependencies: `npm install`
+2.  Set up your PostgreSQL database and update `.env` with `DATABASE_URL`.
+3.  Generate a `JWT_SECRET` and add it to `.env`.
+4.  Run Drizzle migrations: `npm run migrate` (You'll need to define this script and install `drizzle-kit`)
+5.  Start the service: `npm run dev` (You'll need to define this script)
 
 ## Project Structure
 
@@ -42,12 +84,6 @@ Builds the app for production to the `dist` folder.
 ### `npm run start`
 
 Runs the compiled app from the `dist` folder.
-
-## Environment Variables
-
-Create a `.env` file in the root of this service (by copying `.env.example`) and define the following variables:
-
-- `PORT`: The port the server will listen on (default: `3000`).
 
 ## Deployment
 
